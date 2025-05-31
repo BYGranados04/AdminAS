@@ -1,20 +1,35 @@
 require('dotenv').config();
-
 const express = require('express');
 const cors = require('cors');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 
-// ✅ CONFIGURAR CORS
+// 🛡️ Middleware de prueba para saber si se ejecuta
+app.use((req, res, next) => {
+  console.log('🟢 Middleware ejecutado:', req.method, req.url);
+  next();
+});
+
+// ✅ CORS completo (acepta también preflight)
 app.use(cors({
   origin: 'https://bytedeveloopers.com',
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type'],
+  credentials: true,
 }));
 
 app.use(express.json());
 
+// Ruta de prueba
+app.get('/', (req, res) => {
+  res.send('✅ Backend activo y middleware cargado');
+});
+
+// ✅ IMPORTANTE: Manejo explícito del preflight
+app.options('*', cors());
+
+// Ruta principal de Stripe
 app.post('/create-checkout-session', async (req, res) => {
   const { carrito } = req.body;
 
@@ -45,12 +60,7 @@ app.post('/create-checkout-session', async (req, res) => {
   }
 });
 
-// ✅ USAR PUERTO DINÁMICO PARA RENDER
 const PORT = process.env.PORT || 4242;
 app.listen(PORT, () => {
   console.log(`✅ Servidor corriendo en el puerto ${PORT}`);
-});
-
-app.get('/', (req, res) => {
-  res.send('✅ Backend activo');
 });
