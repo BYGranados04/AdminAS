@@ -1,19 +1,18 @@
-require('dotenv').config(); // ✅ Esto debe ir primero
+require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); // Ya se puede usar
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 
-// ✅ Configurar CORS SOLO para tu dominio
-const corsOptions = {
+// ✅ CONFIGURAR CORS
+app.use(cors({
   origin: 'https://bytedeveloopers.com',
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type'],
-};
+}));
 
-app.use(cors(corsOptions));
 app.use(express.json());
 
 app.post('/create-checkout-session', async (req, res) => {
@@ -25,7 +24,7 @@ app.post('/create-checkout-session', async (req, res) => {
       product_data: {
         name: item.nombre,
       },
-      unit_amount: item.precio * 100, // Stripe usa centavos
+      unit_amount: item.precio * 100,
     },
     quantity: item.cantidad,
   }));
@@ -41,13 +40,13 @@ app.post('/create-checkout-session', async (req, res) => {
 
     res.json({ id: session.id });
   } catch (err) {
-    console.error('❌ Error en sesión de Stripe:', err.message);
+    console.error('❌ Error en Stripe:', err.message);
     res.status(500).json({ error: 'Fallo al crear sesión de pago' });
   }
 });
 
-// ✅ Render usa process.env.PORT, no pongas puerto fijo
+// ✅ USAR PUERTO DINÁMICO PARA RENDER
 const PORT = process.env.PORT || 4242;
 app.listen(PORT, () => {
-  console.log(`✅ Servidor Stripe corriendo en el puerto ${PORT}`);
+  console.log(`✅ Servidor corriendo en el puerto ${PORT}`);
 });
